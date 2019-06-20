@@ -48,6 +48,30 @@ def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
     nbh_gdf = nbh_gdf.merge(join_price,on='Buurt')
     
     return nbh_gdf
+def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
+    #perform spatial join
+    join_all = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_ListingCount')
+    nbh_gdf = nbh_gdf.merge(join_all,on='Buurt')
+    
+    join_room = gpd.sjoin(nbh_gdf,room_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_RoomRentalCount')
+    nbh_gdf = nbh_gdf.merge(join_room,on='Buurt',how = 'outer')
+    
+    join_entire = gpd.sjoin(nbh_gdf,entire_home_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_EntireLodgeCount')
+    nbh_gdf = nbh_gdf.merge(join_entire,on='Buurt',how = 'outer')
+    
+    join_superhost = gpd.sjoin(nbh_gdf,superhost_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_SuperhostCount')
+    nbh_gdf = nbh_gdf.merge(join_superhost,on='Buurt',how = 'outer')
+    
+    join_beds = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby(['Buurt'])['beds'].sum().reset_index(name='Airbnb_BedsCount')
+    nbh_gdf = nbh_gdf.merge(join_beds,on='Buurt',how = 'outer')
+    
+    join_price = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby(['Buurt'])['price'].mean().reset_index(name='Airbnb_AvgPrice')
+    nbh_gdf = nbh_gdf.merge(join_price,on='Buurt',how = 'outer')
+    
+    nbh_gdf.update(nbh_gdf[['Airbnb_ListingCount','Airbnb_RoomRentalCount',
+                            'Airbnb_EntireLodgeCount','Airbnb_SuperhostCount',
+                            'Airbnb_BedsCount','Airbnb_AvgPrice']].fillna(value=0))
+    return nbh_gdf
 
 def CalculateTouristIntensity(nbh_gdf,year):
     
@@ -55,7 +79,6 @@ def CalculateTouristIntensity(nbh_gdf,year):
     #calculate population density (inhabitant per km2)
     #calculate listingcount
     if year in list(nbh_gdf.columns[3:7]):
-        nbh_gdf['Airbnb_ListingCount']= nbh_gdf['Airbnb_RoomRentalCount'] + nbh_gdf['Airbnb_EntireLodgeCount']
         nbh_gdf['PopDensity_km2'] = nbh_gdf['2018']/nbh_gdf['area_km2']
         nbh_gdf['Airbnb_TouristIntensity'] = (nbh_gdf['Airbnb_BedsCount']/nbh_gdf[year])
         nbh_gdf['Airbnb_TouristIntensity'] = nbh_gdf['Airbnb_TouristIntensity'].replace([np.inf, -np.inf], 0)
