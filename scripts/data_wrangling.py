@@ -20,7 +20,7 @@ def listing2gdf(url):
     geometry = [Point(xy) for xy in zip(df['longitude'], df['latitude'])]
     df = df.drop(['latitude', 'longitude'], axis=1)
     gdf = GeoDataFrame(df, crs={'init': 'epsg:4326'}, geometry=geometry)
-    
+    gdf['date'] = url.split('/')[-3]
     return gdf
 
 def census2gdf(geojson_path):
@@ -36,7 +36,7 @@ def census2gdf(geojson_path):
 def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
     #perform spatial join
     join_all = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_ListingCount')
-    nbh_gdf = nbh_gdf.merge(join_all,on='Buurt')
+    nbh_gdf = nbh_gdf.merge(join_all,on='Buurt',how='outer')
     
     join_room = gpd.sjoin(nbh_gdf,room_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_RoomRentalCount')
     nbh_gdf = nbh_gdf.merge(join_room,on='Buurt',how = 'outer')
@@ -50,12 +50,15 @@ def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
     join_beds = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby(['Buurt'])['beds'].sum().reset_index(name='Airbnb_BedsCount')
     nbh_gdf = nbh_gdf.merge(join_beds,on='Buurt',how = 'outer')
     
-    join_price = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby(['Buurt'])['price'].mean().reset_index(name='Airbnb_AvgPrice')
-    nbh_gdf = nbh_gdf.merge(join_price,on='Buurt',how = 'outer')
+    join_price_room = gpd.sjoin(nbh_gdf,room_gdf,how='inner',op='contains').groupby(['Buurt'])['price'].mean().reset_index(name='Airbnb_AvgPriceRoom')
+    nbh_gdf = nbh_gdf.merge(join_price_room,on='Buurt',how = 'outer')
+    
+    join_price_entire = gpd.sjoin(nbh_gdf,entire_home_gdf,how='inner',op='contains').groupby(['Buurt'])['price'].mean().reset_index(name='Airbnb_AvgPriceEntireLodge')
+    nbh_gdf = nbh_gdf.merge(join_price_entire,on='Buurt',how = 'outer')
     
     nbh_gdf.update(nbh_gdf[['Airbnb_ListingCount','Airbnb_RoomRentalCount',
                             'Airbnb_EntireLodgeCount','Airbnb_SuperhostCount',
-                            'Airbnb_BedsCount','Airbnb_AvgPrice']].fillna(value=0))
+                            'Airbnb_BedsCount','Airbnb_AvgPriceRoom','Airbnb_AvgPriceEntireLodge']].fillna(value=0))
     return nbh_gdf
 
 def CalculateTouristIntensity(nbh_gdf,year):
