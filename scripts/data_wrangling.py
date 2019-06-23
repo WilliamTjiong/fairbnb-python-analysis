@@ -33,7 +33,7 @@ def census2gdf(geojson_path):
     return nbh_gdf
 
 
-def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
+def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf,illegal_gdf):
     #perform spatial join
     join_all = gpd.sjoin(nbh_gdf,airbnb_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_ListingCount')
     nbh_gdf = nbh_gdf.merge(join_all,on='Buurt',how='outer')
@@ -55,6 +55,10 @@ def aggregate(airbnb_gdf,nbh_gdf,room_gdf,entire_home_gdf,superhost_gdf):
     
     join_price_entire = gpd.sjoin(nbh_gdf,entire_home_gdf,how='inner',op='contains').groupby(['Buurt'])['price'].mean().reset_index(name='Airbnb_AvgPriceEntireLodge')
     nbh_gdf = nbh_gdf.merge(join_price_entire,on='Buurt',how = 'outer')
+    
+    join_illegal = gpd.sjoin(nbh_gdf,illegal_gdf,how='inner',op='contains').groupby('Buurt').size().reset_index(name='Airbnb_Over30Days')
+    nbh_gdf = nbh_gdf.merge(join_illegal,on='Buurt',how='outer')
+    
     
     nbh_gdf.update(nbh_gdf[['Airbnb_ListingCount','Airbnb_RoomRentalCount',
                             'Airbnb_EntireLodgeCount','Airbnb_SuperhostCount',
