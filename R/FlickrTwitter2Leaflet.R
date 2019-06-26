@@ -8,11 +8,11 @@ twitter_geojson <- rgdal::readOGR(dsn='./data/tweets.geojson')
 
 
 pal_flickr <- colorFactor(palette = 'viridis', domain = flickr_geojson$traveler_type)
-pal_twitter <- colorFactor(palette = rainbow(13), domain = twitter_geojson$hashtag)
+pal_twitter <- colorFactor(palette = rainbow(length(unique(twitter_geojson$hashtag))), domain = twitter_geojson$hashtag)
 
 north_arrow <- "<img src='http://pluspng.com/img-png/free-png-north-arrow-big-image-png-1659.png' style='width:30px;height:40px;'>"
 
-m <- leaflet(data=amsterdam_geojson,options = leafletOptions(zoomControl = F)) %>% 
+m <- leaflet(options = leafletOptions(zoomControl = F)) %>% 
   setView(lng = 4.895168, lat = 52.370216, zoom = 11) %>%
   addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
   
@@ -36,5 +36,5 @@ m <- leaflet(data=amsterdam_geojson,options = leafletOptions(zoomControl = F)) %
   hideGroup("Twitter")
   
 m
-saveWidget(m, file="FlickrTwitter_Leaflet.html")
+saveWidget(m, file="./FlickrTwitter_Leaflet.html")
 
