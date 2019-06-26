@@ -1,0 +1,40 @@
+#load libraries
+source('./source/EasyLoad.R')
+packages <- c('rgdal','leaflet','htmlwidgets')
+EasyLoad(packages)
+
+flickr_geojson <- rgdal::readOGR(dsn='./data/GeotaggedFlickr_24june2019.geojson')
+twitter_geojson <- rgdal::readOGR(dsn='./data/tweets.geojson')
+
+
+pal_flickr <- colorFactor(palette = 'viridis', domain = flickr_geojson$traveler_type)
+pal_twitter <- colorFactor(palette = rainbow(13), domain = twitter_geojson$hashtag)
+
+north_arrow <- "<img src='http://pluspng.com/img-png/free-png-north-arrow-big-image-png-1659.png' style='width:30px;height:40px;'>"
+
+m <- leaflet(data=amsterdam_geojson,options = leafletOptions(zoomControl = F)) %>% 
+  setView(lng = 4.895168, lat = 52.370216, zoom = 11) %>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  
+  #flickr
+  addCircleMarkers(group = "Flickr",data = flickr_geojson,radius = 4,stroke=F,fillOpacity = 0.7,color = ~pal_flickr(traveler_type),
+             popup = paste("<b>Photo title:</b>", flickr_geojson$photo_title, "<br>",
+                           "<b>Date taken:</b>", flickr_geojson$date_taken, "<br>",
+                           "<b>User origin:</b>", flickr_geojson$user_location))%>%
+  #twitter
+  addCircleMarkers(group = "Twitter",data = twitter_geojson,radius = 4,stroke=F,fillOpacity = 0.7,color = ~pal_twitter(hashtag),
+                   popup = paste("<b>Neighbourhood:</b>", twitter_geojson$neighbourh, "<br>",
+                                 "<b>Tweet date:</b>", twitter_geojson$created, "<br>",
+                                 "<b>Text:</b>", twitter_geojson$text))%>%
+  
+  addLegend(group = "Flickr",data =flickr_geojson ,"topleft", pal = pal_flickr, values = ~traveler_type,title = "Traveler type")%>%
+  addLegend(group = "Twitter",data =twitter_geojson ,"topleft", pal = pal_twitter, values = ~hashtag,title = "Hashtag")%>%
+  addMiniMap(position = "bottomright",toggleDisplay = T,minimized = T)%>%
+  addControl(html = north_arrow , position = "topright")%>%
+  addScaleBar(position = 'bottomleft',options = scaleBarOptions(imperial = F))%>%
+  addLayersControl(overlayGroups = c("Flickr", "Twitter"),options = layersControlOptions(collapsed = FALSE))%>%
+  hideGroup("Twitter")
+  
+m
+saveWidget(m, file="FlickrTwitter_Leaflet.html")
+
