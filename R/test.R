@@ -5,9 +5,8 @@ library(sf)
 
 MAPBOX = 'pk.eyJ1Ijoic2VucGFpbWFwIiwiYSI6ImNqeGRzaG02dTAza3Uzb2w3aTA1Y2NkaTgifQ.tKJOjrcXcOlkRnpE05VdCw'
 
-amsterdam <- geojson_sf('./data/amsterdam_neighbourhoods.geojson')
+
 flickr <-geojson_sf('./data/GeotaggedFlickr_24june2019.geojson')
-flickr$dummy_value <-  sample(10000:10000000, size = nrow(flickr), replace=T)
 
 ms = mapdeck_style("light")
 m <- mapdeck(token= MAPBOX, style = ms, pitch = 45, location = c(4.895168, 52.370216),zoom=10)%>%
