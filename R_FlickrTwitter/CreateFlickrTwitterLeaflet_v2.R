@@ -70,7 +70,7 @@ for (row in 1:length(hashtags)){
 # Draw plot
 ggplot(df_twitter, aes(x=hashtag, y=pct)) + 
   geom_bar(stat="identity", width=.5, fill=rainbow(n=length(df_twitter$hashtag))) + 
-  labs(title="Percentage of tourist per hashtag",
+  labs(title="Percentage of tourists per hashtag",
        caption="source: Twitter") + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))+
   xlab('Hashtag')+ylab('%')
@@ -83,6 +83,8 @@ df_twitter.long$variable[df_twitter.long$variable=='pct_non'] <- "non-tourist"
 ggplot(df_twitter.long,aes(hashtag,value,fill=variable))+
   geom_bar(stat="identity",position="dodge")+
   theme(axis.text.x = element_text(angle=65, vjust=0.6))+coord_flip()+
-  xlab('Hashtag')+ylab('Percentage')+labs(fill = "Legend")
+  xlab('Hashtag')+ylab('Percentage')+labs(fill = "Legend")+
+  labs(title="Percentage of tourist/ non-tourist per hashtag",
+       caption="source: Twitter")
 
 
