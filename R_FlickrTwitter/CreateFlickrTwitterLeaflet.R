@@ -1,5 +1,6 @@
 #function to create Flickr and Twitter Lealet
 
+
 FlickrTwitter <- function(flickr_geojson,twitter_geojson){
 
   pal_flickr <- colorFactor(palette = 'viridis', domain = flickr_geojson$traveler_type)
@@ -21,7 +22,8 @@ FlickrTwitter <- function(flickr_geojson,twitter_geojson){
     addCircleMarkers(group = "Twitter",data = twitter_geojson,radius = 4,stroke=F,fillOpacity = 0.7,color = ~pal_twitter(hashtag),
                      popup = paste("<b>Neighbourhood:</b>", twitter_geojson$neighbourh, "<br>",
                                    "<b>Tweet date:</b>", twitter_geojson$created, "<br>",
-                                   "<b>Text:</b>", twitter_geojson$text))%>%
+                                   "<b>Text:</b>", twitter_geojson$text,
+                                   "<b>Traveler type:</b>", twitter_geojson$Descriptio))%>%
     
     addLegend(group = "Flickr",data =flickr_geojson ,"topleft", pal = pal_flickr, values = ~traveler_type,title = "Traveler type")%>%
     addLegend(group = "Twitter",data =twitter_geojson ,"topleft", pal = pal_twitter, values = ~hashtag,title = "Twitter hashtag")%>%
@@ -32,4 +34,3 @@ FlickrTwitter <- function(flickr_geojson,twitter_geojson){
     hideGroup("Twitter")
   return(m)
 }
-  
